@@ -101,12 +101,3 @@ void set_motor(int dir, float pwm_output, int pwm, int in1, int in2){
     digitalWrite(in2,LOW);    
   }
 }
-
-void setup() {
-Serial.begin(115200);
-setup_pins();
-}
-
-void loop() {
-
-}
