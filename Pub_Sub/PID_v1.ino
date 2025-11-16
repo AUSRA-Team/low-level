@@ -15,6 +15,8 @@ float prev_error = 0;
 float integral = 0;
 float rpm = 0;
 float pos = 0;
+float v_filt = 0;
+float v_prev = 0;
 int PPR = 1980;
 
 // Setup All Pins
@@ -34,7 +36,7 @@ void PID(float set_point,float PPR, unsigned long sample_time){
   unsigned long current_time = millis();
   static float control_signal = 0;
 
-  //PID Control
+//PID Control
   if ((current_time-last_time)>=sample_time){
     long current_count = encoder_count;
     long delta_count = current_count - last_count;
@@ -42,7 +44,9 @@ void PID(float set_point,float PPR, unsigned long sample_time){
     rpm = (delta_count/PPR) * (60.0/ delta_time);
     pos = (delta_count/PPR) * 2 * PI;
 
-    float error = set_point - rpm;
+    v_filt = 0.854*v_filt + 0.0728*rpm + 0.00728 * v_prev;
+    v_prev = rpm;
+    float error = set_point - v_prev;
     integral += error * delta_time;
     float derivative = (error-prev_error)/ delta_time;
     control_signal = kp * error + ki * integral + kd * derivative ;
