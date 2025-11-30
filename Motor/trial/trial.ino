@@ -8,19 +8,19 @@
 #define MOTOR0_PWM_B 23
 
 // Motor 1 pins (adjust to your setup)
-#define MOTOR1_ENC_A 32
-#define MOTOR1_ENC_B 33
+#define MOTOR1_ENC_A 33
+#define MOTOR1_ENC_B 32
 #define MOTOR1_PWM_A 27
 #define MOTOR1_PWM_B 14
 
 // Motor 2 pins (adjust to your setup)
-#define MOTOR2_ENC_A 34
-#define MOTOR2_ENC_B 35
+#define MOTOR2_ENC_A 35
+#define MOTOR2_ENC_B 34
 #define MOTOR2_PWM_A 12
 #define MOTOR2_PWM_B 13
 
 // Motor specs
-#define PPR 4180.0  // Pulses per revolution - ADJUST TO YOUR ENCODER
+#define PPR 960.0  // Pulses per revolution - ADJUST TO YOUR ENCODER
 
 // ========== GLOBAL OBJECTS ==========
 Motor motors[3];
@@ -60,9 +60,9 @@ void setup() {
     motors[2].init(MOTOR2_ENC_A, MOTOR2_ENC_B, MOTOR2_PWM_A, MOTOR2_PWM_B, PPR);
     
     // Set PID parameters (tune these for your motors)
-    motors[0].setControlParams(0.5, 0.1, 0.01);
-    motors[1].setControlParams(0.5, 0.1, 0.01);
-    motors[2].setControlParams(0.5, 0.1, 0.01);
+    motors[0].setControlParams(10, 0, 0);
+    motors[1].setControlParams(10, 0, 0);
+    motors[2].setControlParams(10, 0, 0);
     
     // Attach interrupts
     attachInterrupt(digitalPinToInterrupt(MOTOR0_ENC_A), motor0_isr, RISING);
