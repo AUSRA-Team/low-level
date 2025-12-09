@@ -2,22 +2,22 @@
 
 // ========== PIN CONFIGURATION ==========
 // Motor 0 pins
-#define MOTOR0_ENC_A 18
-#define MOTOR0_ENC_B 19
-#define MOTOR0_PWM_A 22
-#define MOTOR0_PWM_B 23
+#define MOTOR0_ENC_A 2
+#define MOTOR0_ENC_B 1
+#define MOTOR0_PWM_A 6
+#define MOTOR0_PWM_B 7
 
-// Motor 1 pins (adjust to your setup)
-#define MOTOR1_ENC_A 33
-#define MOTOR1_ENC_B 32
-#define MOTOR1_PWM_A 27
-#define MOTOR1_PWM_B 14
+// Motor 1 pins
+#define MOTOR1_ENC_A 35
+#define MOTOR1_ENC_B 21
+#define MOTOR1_PWM_A 8
+#define MOTOR1_PWM_B 9
 
-// Motor 2 pins (adjust to your setup)
-#define MOTOR2_ENC_A 35
-#define MOTOR2_ENC_B 34
-#define MOTOR2_PWM_A 12
-#define MOTOR2_PWM_B 13
+// Motor 2 pins
+#define MOTOR2_ENC_A 17
+#define MOTOR2_ENC_B 18
+#define MOTOR2_PWM_A 4
+#define MOTOR2_PWM_B 5
 
 // Motor specs
 #define PPR 960.0  // Pulses per revolution - ADJUST TO YOUR ENCODER
