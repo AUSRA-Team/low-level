@@ -1,5 +1,5 @@
 #include "Motor.h"
-
+#include <WiFi.h>
 // ========== PIN CONFIGURATION ==========
 // Motor 0 pins
 #define MOTOR0_ENC_A 2
@@ -19,8 +19,16 @@
 #define MOTOR2_PWM_A 4
 #define MOTOR2_PWM_B 5
 
+// Define Network Credentials
+char ssid[] = "Omar's IPhone";
+char password[] = "12345679";
+
+// Define Agent IP
+IPAddress agent_ip(172, 20, 10, 5);
+size_t agent_port = 8888;
+
 // Motor specs
-#define PPR 960.0  // Pulses per revolution - ADJUST TO YOUR ENCODER
+#define PPR 935.0  // Pulses per revolution
 
 // ========== GLOBAL OBJECTS ==========
 Motor motors[3];
@@ -59,7 +67,7 @@ void setup() {
     motors[1].init(MOTOR1_ENC_A, MOTOR1_ENC_B, MOTOR1_PWM_A, MOTOR1_PWM_B, PPR);
     motors[2].init(MOTOR2_ENC_A, MOTOR2_ENC_B, MOTOR2_PWM_A, MOTOR2_PWM_B, PPR);
     
-    // Set PID parameters (tune these for your motors)
+    // Set PID parameters
     motors[0].setControlParams(10, 0, 0);
     motors[1].setControlParams(10, 0, 0);
     motors[2].setControlParams(10, 0, 0);

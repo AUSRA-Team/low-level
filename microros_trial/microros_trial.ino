@@ -4,6 +4,7 @@
 #include <rcl/error_handling.h>
 #include <rclc/rclc.h>
 #include <rclc/executor.h>
+#include <WiFi.h>
 
 // Use standard ROS messages (no custom message generation needed)
 #include <std_msgs/msg/float32_multi_array.h>
@@ -30,7 +31,15 @@
 #define MOTOR2_PWM_A 4
 #define MOTOR2_PWM_B 5
 
-#define PPR 960.0  // Pulses per revolution
+#define PPR 935.0  // Pulses per revolution
+
+// Define Network Credentials
+char ssid[] = "Abdelrhman tarek";
+char password[] = "mtmos12345";
+
+// Define Agent IP
+char agent_ip[] = "10.143.62.126";
+size_t agent_port = 8888;
 
 // ========== MOTOR OBJECTS ==========
 Motor motors[3];
@@ -128,7 +137,21 @@ void publishMotorStates() {
 void setup() {
     // Initialize serial for debugging
     Serial.begin(115200);
+    delay(2000);
+
+    Serial.println("--------------------------------");
+    Serial.println("APP STARTED. Attempting WiFi connection...");
+    Serial.print("Target SSID: ");
+    Serial.println(ssid);
+    Serial.print("Target Agent IP: ");
+    Serial.println(agent_ip);
+    Serial.println("--------------------------------");
+
+    set_microros_wifi_transports(ssid, password, agent_ip, agent_port);
     
+    Serial.println("WiFi Connected! Connecting to micro-ROS Agent...");
+
+    WiFi.setSleep(false);
     // LED setup
     pinMode(LED_PIN, OUTPUT);
     digitalWrite(LED_PIN, HIGH);
@@ -144,9 +167,9 @@ void setup() {
     motors[2].init(MOTOR2_ENC_A, MOTOR2_ENC_B, MOTOR2_PWM_A, MOTOR2_PWM_B, PPR);
     
     // Set PID parameters (TUNE THESE)
-    motors[0].setControlParams(5.0, 0.5, 0.0);
-    motors[1].setControlParams(5.0, 0.5, 0.0);
-    motors[2].setControlParams(5.0, 0.5, 0.0);
+    motors[0].setControlParams(10.0, 0.5, 0.0);
+    motors[1].setControlParams(10.0, 0.5, 0.0);
+    motors[2].setControlParams(10.0, 0.5, 0.0);
     
     // Attach encoder interrupts
     attachInterrupt(digitalPinToInterrupt(MOTOR0_ENC_A), motor0_isr, RISING);
@@ -158,9 +181,6 @@ void setup() {
     // ===== Setup micro-ROS =====
     Serial.println("Connecting to micro-ROS agent...");
     
-    // Set micro-ROS transport
-    set_microros_transports();
-    
     delay(2000);
     
     allocator = rcl_get_default_allocator();
@@ -170,13 +190,17 @@ void setup() {
     
     // Create node
     RCCHECK(rclc_node_init_default(&node, "motor_controller_node", "", &support));
-    
+
+    //Implement BEST EFFORT QoS (UDP-style)    
+    rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
+
     // Create publisher
-    RCCHECK(rclc_publisher_init_default(
+    RCCHECK(rclc_publisher_init(
         &publisher,
         &node,
         ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32MultiArray),
-        "motor_states"));
+        "motor_states",
+        &qos_profile));
     
     // Initialize message array
     motor_state_msg.data.capacity = 6;
@@ -189,11 +213,12 @@ void setup() {
     }
     
     // Create subscriber
-    RCCHECK(rclc_subscription_init_default(
+    RCCHECK(rclc_subscription_init(
         &subscriber,
         &node,
         ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist),
-        "cmd_vel"));
+        "cmd_vel"
+        ,&qos_profile));
     
     // Create timer (for publishing at fixed rate)
     RCCHECK(rclc_timer_init_default(
