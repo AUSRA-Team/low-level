@@ -34,11 +34,11 @@
 #define PPR 935.0  // Pulses per revolution
 
 // Define Network Credentials
-char ssid[] = "Abdelrhman tarek";
-char password[] = "mtmos12345";
+char ssid[] = "robot";
+char password[] = "123456789";
 
 // Define Agent IP
-char agent_ip[] = "10.143.62.126";
+char agent_ip[] = "192.168.177.126";
 size_t agent_port = 8888;
 
 // ========== MOTOR OBJECTS ==========
