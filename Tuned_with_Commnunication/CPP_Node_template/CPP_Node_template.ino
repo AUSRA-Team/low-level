@@ -6,7 +6,6 @@
 #include <rclc/executor.h>
 #include <string.h>
 
-// --- NEW: Included for the Ping Watchdog ---
 #include <rmw_microros/rmw_microros.h>
 
 // Standard ROS 2 Messages
@@ -22,7 +21,7 @@ std_msgs__msg__Float64MultiArray msg_sub;
 rcl_publisher_t publisher;
 sensor_msgs__msg__JointState msg_pub;
 rclc_executor_t executor;
-rclc_support_t support;
+rclc_support_t support;`
 rcl_allocator_t allocator;
 rcl_node_t node;
 
@@ -31,15 +30,11 @@ Motor cameraMotor(M1_IN_A, M1_IN_B, 26.0, 12.0, 0.0);
 Motor switchMotor(M2_IN_A, M2_IN_B, 26.0, 12.0, 0.0);
 Motor chargerMotor(M3_IN_A, M3_IN_B, 26.0, 12.0, 0.0);
 
-float t1 = 0, t2 = 0, t3 = 0;
+float cmd_t1 = 0, cmd_t2 = 0, cmd_t3 = 0; // Targets from ROS
+float t1 = 0, t2 = 0, t3 = 0;             // Ramped setpoints for PID
 volatile long ticks1 = 0, ticks2 = 0, ticks3 = 0;
 unsigned long lastTime = 0;
-
-// --- NEW: Watchdog Timer ---
 unsigned long lastPingTime = 0;
-
-// --- Cumulative Position Tracking ---
-double joint_positions[3] = {0.0, 0.0, 0.0};
 
 const float RADS_TO_RPM = 60.0 / (2.0 * PI);
 const float RPM_TO_RADS = (2.0 * PI) / 60.0;
@@ -49,11 +44,9 @@ const float RPM_TO_RADS = (2.0 * PI) / 60.0;
 #define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){}}
 
 void error_loop(){ 
-  // Wait 5 seconds, then perform a software reset automatically
   delay(2000); 
   ESP.restart(); 
 }
-// -------------------------------------------
 
 // --- Interrupts ---
 void IRAM_ATTR isr1() { (digitalRead(M1_ENC_A) == digitalRead(M1_ENC_B)) ? ticks1++ : ticks1--; }
@@ -63,9 +56,9 @@ void IRAM_ATTR isr3() { (digitalRead(M3_ENC_A) == digitalRead(M3_ENC_B)) ? ticks
 void subscription_callback(const void * msgin) {
   const std_msgs__msg__Float64MultiArray * msg = (const std_msgs__msg__Float64MultiArray *)msgin;
   if (msg->data.size >= 3) {
-    t1 = msg->data.data[0] * RADS_TO_RPM;
-    t2 = msg->data.data[1] * RADS_TO_RPM;
-    t3 = msg->data.data[2] * RADS_TO_RPM;
+    cmd_t1 = msg->data.data[0] * RADS_TO_RPM;
+    cmd_t2 = msg->data.data[1] * RADS_TO_RPM;
+    cmd_t3 = msg->data.data[2] * RADS_TO_RPM;
   }
 }
 
@@ -88,7 +81,6 @@ void setup() {
   RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
   RCCHECK(rclc_node_init_default(&node, "esp32_base_controller", "", &support));
 
-  // --- 1. Initialize Subscriber (Best Effort / No-Lag Mode) ---
   rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data; 
 
   RCCHECK(rclc_subscription_init(
@@ -102,7 +94,6 @@ void setup() {
   msg_sub.data.capacity = 3;
   msg_sub.data.data = data_buffer;
 
-  // --- 2. Initialize Publisher ---
   RCCHECK(rclc_publisher_init(
     &publisher, 
     &node,
@@ -110,10 +101,8 @@ void setup() {
     "joint_states",
     &qos_profile)); 
 
-  // Proper String Sequence Handling
   static char * joint_names_ptrs[3] = {(char*)"ausrabot_joint_1", (char*)"ausrabot_joint_2", (char*)"ausrabot_joint_3"};
   static rosidl_runtime_c__String name_sequence[3];
-  
   msg_pub.name.capacity = 3;
   msg_pub.name.size = 3;
   msg_pub.name.data = name_sequence;
@@ -124,17 +113,11 @@ void setup() {
     msg_pub.name.data[i].capacity = strlen(joint_names_ptrs[i]) + 1;
   }
 
-  // --- Velocity Buffer ---
   static double vel_buffer[3] = {0,0,0};
-  msg_pub.velocity.capacity = 3; 
-  msg_pub.velocity.size = 3; 
-  msg_pub.velocity.data = vel_buffer;
+  msg_pub.velocity.capacity = 3; msg_pub.velocity.size = 3; msg_pub.velocity.data = vel_buffer;
 
-  // --- Position Buffer ---
   static double pos_buffer[3] = {0,0,0};
-  msg_pub.position.capacity = 3; 
-  msg_pub.position.size = 3; 
-  msg_pub.position.data = pos_buffer;
+  msg_pub.position.capacity = 3; msg_pub.position.size = 3; msg_pub.position.data = pos_buffer;
 
   msg_pub.effort.capacity = 0; 
 
@@ -142,7 +125,7 @@ void setup() {
   RCCHECK(rclc_executor_add_subscription(&executor, &subscriber, &msg_sub, &subscription_callback, ON_NEW_DATA));
 
   lastTime = micros();
-  lastPingTime = micros(); // Initialize ping timer
+  lastPingTime = micros();
 }
 
 void loop() {
@@ -150,19 +133,39 @@ void loop() {
 
   unsigned long currentTime = micros();
   
-  // Ping the agent every 2 seconds to confirm it is still alive
   if (currentTime - lastPingTime >= 1000000) { 
     lastPingTime = currentTime;
-    // Timeout set to 50ms, with 2 attempts
     if (rmw_uros_ping_agent(50, 2) != RMW_RET_OK) {
-      error_loop(); // Agent is gone! Force the 2-second reset loop.
+      error_loop(); 
     }
   }
-  // --------------------------------
 
   float dt = (float)(currentTime - lastTime) / 1000000.0;
 
   if (dt >= (SAMPLE_MS / 1000.0)) {
+    
+    // --- SYNCHRONIZED RAMPING LOGIC ---
+    float diff1 = cmd_t1 - t1;
+    float diff2 = cmd_t2 - t2;
+    float diff3 = cmd_t3 - t3;
+
+    float max_diff = fmaxf(fabs(diff1), fmaxf(fabs(diff2), fabs(diff3)));
+
+    if (max_diff > 0.01) {
+        float max_change = MAX_ACCEL * dt;
+        float scale = 1.0;
+
+        if (max_diff > max_change) {
+            scale = max_change / max_diff;
+        }
+
+        t1 += diff1 * scale;
+        t2 += diff2 * scale;
+        t3 += diff3 * scale;
+    } else {
+        t1 = cmd_t1; t2 = cmd_t2; t3 = cmd_t3;
+    }
+
     noInterrupts();
     long c1 = ticks1; long c2 = ticks2; long c3 = ticks3;
     interrupts();
@@ -170,23 +173,22 @@ void loop() {
     cameraMotor.update(t1, c1, dt);
     switchMotor.update(t2, c2, dt);
     chargerMotor.update(t3, c3, dt);
-
+    
     struct timespec tv;
     clock_gettime(CLOCK_REALTIME, &tv);
     msg_pub.header.stamp.sec = tv.tv_sec;
     msg_pub.header.stamp.nanosec = tv.tv_nsec;
 
-    // 1. Assign Velocities
     msg_pub.velocity.data[0] = cameraMotor.getRPM() * RPM_TO_RADS;
     msg_pub.velocity.data[1] = switchMotor.getRPM() * RPM_TO_RADS;
     msg_pub.velocity.data[2] = chargerMotor.getRPM() * RPM_TO_RADS;
 
-    // 2. Integrate Positions
-    for(int i = 0; i < 3; i++) {
-      joint_positions[i] += msg_pub.velocity.data[i] * dt;
-      msg_pub.position.data[i] = joint_positions[i];
-    }
+    double tick_to_rad = (2.0 * PI) / TOTAL_CPR;
+    msg_pub.position.data[0] = (double)c1 * tick_to_rad;
+    msg_pub.position.data[1] = (double)c2 * tick_to_rad;
+    msg_pub.position.data[2] = (double)c3 * tick_to_rad;
 
+    // Publish the message
     RCSOFTCHECK(rcl_publish(&publisher, &msg_pub, NULL));
 
     lastTime = currentTime;
