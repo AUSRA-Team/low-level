@@ -12,11 +12,11 @@ const int SAMPLE_MS = 50;
 const int M1_ENC_A = 17; const int M1_ENC_B = 18;
 const int M1_IN_A  = 4;  const int M1_IN_B  = 5;
 
-// Motor 2 - Switch
+// Motor 2 - Charger
 const int M2_ENC_A = 35;  const int M2_ENC_B = 21;
 const int M2_IN_A  = 8;  const int M2_IN_B  = 9;
 
-// Motor 3 - Charger
+// Motor 3 - Switch
 const int M3_ENC_A = 2; const int M3_ENC_B = 1;
 const int M3_IN_A  = 6;  const int M3_IN_B  = 7;
 
