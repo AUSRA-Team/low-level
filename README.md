@@ -69,3 +69,7 @@ Integrated controller with Micro-ROS communication capabilities.
    ```bash
    git clone https://github.com/AUSRA-Team/low-level.git
    cd low-level
+2. For live Tuning:
+   ```bash
+   SA 100   #send to all motor speed 100 RPM
+   P1 20    #set P gain for motor 1 to 20
