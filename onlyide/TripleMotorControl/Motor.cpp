@@ -31,6 +31,20 @@ float Motor::getRPM() {
     return _filteredRPM;
 }
 
+// --- Live Tuning Implementation ---
+// These pass the new gains into the internal PIDController object
+void Motor::setP(float p) {
+    _pid.setP(p);
+}
+
+void Motor::setI(float i) {
+    _pid.setI(i);
+}
+
+void Motor::setD(float d) {
+    _pid.setD(d);
+}
+
 void Motor::drive(float output, float target) {
     int pwm = constrain(abs((int)output), 0, 255);
     
