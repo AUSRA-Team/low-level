@@ -102,25 +102,48 @@ Topics:
    
    2- /joint states   # Multi array which is the esp publish on it the velocities and positions come from the encoders back to the omnidriver to calculate the odom.
 
-# Wifi_Teleop
-1. Core Execution Commands
+## Wifi_Teleop
 
-   1) Start WiFi Agent: ros2 run micro_ros_agent micro_ros_agent udp4 --port 8888
+### Core Execution Commands
 
-   2) Start Serial Agent (Alternative): ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM0
+1. **Start WiFi Agent:**
+   ```bash
+   ros2 run micro_ros_agent micro_ros_agent udp4 --port 8888
+   ```
 
-   3) Start Kinematics Node: python3 omni_controller.py (Optional: needed for Teleop)
+2. **Start Serial Agent** (Alternative):
+   ```bash
+   ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM0
+   ```
 
-   4) Start Keyboard Control: ros2 run teleop_twist_keyboard teleop_twist_keyboard
+3. **Start Kinematics Node** (Optional: needed for Teleop):
+   ```bash
+   python3 omni_controller.py
+   ```
 
-   5) Monitor Topic: ros2 topic echo /joint_group_velocity_controller/commands
+4. **Start Keyboard Control:**
+   ```bash
+   ros2 run teleop_twist_keyboard teleop_twist_keyboard
+   ```
 
-2. Mandatory Network Setup
+5. **Monitor Topic:**
+   ```bash
+   ros2 topic echo /joint_group_velocity_controller/commands
+   ```
 
-   1) Identify Agent IP: Run ip a to find your laptop's WiFi IP address.
+### Mandatory Network Setup
 
-   2) Update Firmware Constants: Update AGENT_IP, SSID, and WIFI_PASS in the ESP32 code.
+1. **Identify Agent IP:**
+   Run the following command to find your laptop's WiFi IP address:
+   ```bash
+   ip a
+   ```
 
-   3) Match Ports: Ensure the port in the terminal command matches the AGENT_PORT in the code (default: 8888).
+2. **Update Firmware Constants:**
+   Update `AGENT_IP`, `SSID`, and `WIFI_PASS` in the ESP32 code.
 
-   4) Re-flash Requirement: Any change to IP or WiFi credentials requires a new upload to the ESP32.
+3. **Match Ports:**
+   Ensure the port in the terminal command matches the `AGENT_PORT` in the code (default: `8888`).
+
+4. **Re-flash Requirement:**
+   Any change to IP or WiFi credentials requires a new upload to the ESP32.
