@@ -21,7 +21,7 @@ std_msgs__msg__Float64MultiArray msg_sub;
 rcl_publisher_t publisher;
 sensor_msgs__msg__JointState msg_pub;
 rclc_executor_t executor;
-rclc_support_t support;`
+rclc_support_t support;
 rcl_allocator_t allocator;
 rcl_node_t node;
 
