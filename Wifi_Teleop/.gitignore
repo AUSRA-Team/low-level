@@ -1,0 +1,12 @@
+# VS Code Intellisense databases
+.vscode/*.db*
+.vscode/ipch/
+
+# ROS 2 Build folders
+build/
+install/
+log/
+
+# Python compiled files
+__pycache__/
+*.pyc

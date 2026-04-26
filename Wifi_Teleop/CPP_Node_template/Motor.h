@@ -11,11 +11,6 @@ public:
     void update(float targetRPM, long currentTicks, float dt);
     float getRPM();
 
-    // --- Live Tuning Functions ---
-    void setP(float p);
-    void setI(float i);
-    void setD(float d);
-
 private:
     PIDController _pid;
     int _pinA, _pinB;

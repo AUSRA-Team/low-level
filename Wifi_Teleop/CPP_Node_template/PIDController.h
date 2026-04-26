@@ -8,11 +8,6 @@ public:
     void reset();
     float compute(float target, float current, float dt);
 
-    // Only the declarations here
-    void setP(float p);
-    void setI(float i);
-    void setD(float d);
-
 private:
     float _kp, _ki, _kd;
     float _integral, _lastError;
