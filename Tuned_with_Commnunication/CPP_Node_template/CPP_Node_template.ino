@@ -25,6 +25,9 @@ rclc_support_t support;
 rcl_allocator_t allocator;
 rcl_node_t node;
 
+// --- Robot Namespace (received from Jetson before micro-ROS starts) ---
+static char g_ns[32] = "";
+
 // Motor Instances
 Motor cameraMotor(M1_IN_A, M1_IN_B, 26.0, 12.0, 0.0);
 Motor switchMotor(M2_IN_A, M2_IN_B, 26.0, 12.0, 0.0);
@@ -63,6 +66,18 @@ void subscription_callback(const void * msgin) {
 }
 
 void setup() {
+  Serial.begin(115200);
+
+  String ns = "";
+  while (ns.length() == 0) {
+    if (Serial.available()) {
+      ns = Serial.readStringUntil('\n');
+      ns.trim();
+    }
+  }
+  strncpy(g_ns, ns.c_str(), sizeof(g_ns) - 1);
+  g_ns[sizeof(g_ns) - 1] = '\0';
+
   set_microros_transports();
 
   pinMode(M1_ENC_A, INPUT_PULLUP); pinMode(M1_ENC_B, INPUT_PULLUP);
@@ -79,7 +94,7 @@ void setup() {
   allocator = rcl_get_default_allocator();
 
   RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
-  RCCHECK(rclc_node_init_default(&node, "esp32_base_controller", "", &support));
+  RCCHECK(rclc_node_init_default(&node, "esp32_base_controller", g_ns, &support));
 
   rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data; 
 
@@ -101,7 +116,7 @@ void setup() {
     "joint_states",
     &qos_profile)); 
 
-  static char * joint_names_ptrs[3] = {(char*)"ausrabot_joint_1", (char*)"ausrabot_joint_2", (char*)"ausrabot_joint_3"};
+  static char * joint_names_ptrs[3] = {(char*)"ausra_joint_1", (char*)"ausra_joint_2", (char*)"ausra_joint_3"};
   static rosidl_runtime_c__String name_sequence[3];
   msg_pub.name.capacity = 3;
   msg_pub.name.size = 3;

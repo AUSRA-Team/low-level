@@ -90,17 +90,24 @@ Integrated controller with Micro-ROS communication capabilities.
       source install/local_setup.bash
 ## System Ready to Run
 
-1. Start Micro-ros Agent for Serial connection:
+1. Send the robot namespace (for example: "ausra_1") to the ESP32 through serial communication:
+   ```bash
+   echo "<robot_namespace>" > /dev/ttyACM0
+   ```
+
+2. Start Micro-ros Agent for Serial connection:
    ```bash
    ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM0
-2. viewing the topics between ros and esp
+   ```
+
+3. viewing the topics between ros and esp
    ```bash
    ros2 topic list
 Topics: 
  
-   1- /joint_group_velocity_controller/commands # Array that carries the target speeds come from the omnidriver.
+   1- /<robot_namespace>/joint_group_velocity_controller/commands # Array that carries the target speeds come from the omnidriver.
    
-   2- /joint states   # Multi array which is the esp publish on it the velocities and positions come from the encoders back to the omnidriver to calculate the odom.
+   2- /<robot_namespace>/joint states   # Multi array which is the esp publish on it the velocities and positions come from the encoders back to the omnidriver to calculate the odom.
 
 ## Wifi_Teleop
 
