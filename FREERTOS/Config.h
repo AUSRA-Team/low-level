@@ -5,8 +5,8 @@
 
 // Physical Constants
 const float TOTAL_CPR = 1997.0; 
-const float LPF_ALPHA = 0.15;
-const int SAMPLE_MS = 50;
+const float LPF_ALPHA = 0.45;
+const int SAMPLE_MS = 30;
 
 // Motor 1 - Camera
 const int M1_ENC_A = 17; const int M1_ENC_B = 18;
