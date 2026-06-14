@@ -215,7 +215,7 @@ void microROSTask(void * parameter) {
     const TickType_t xPublishPeriod = pdMS_TO_TICKS(20); // 50 Hz reporting rate
     unsigned long lastPingTime = millis();
     int64_t last_published_time_ns = 0;
-
+    int missed_pings = 0;
     for(;;) {
         // Check for incoming velocity target data arrays from ROS 2
         rclc_executor_spin_some(&executor, RCL_MS_TO_NS(0));
@@ -225,7 +225,14 @@ void microROSTask(void * parameter) {
             lastPingTime = millis();
             if (rmw_uros_ping_agent(50, 2) == RMW_RET_OK) {
                 // Continuous background synchronization to defeat ESP32 oscillator drift
-                rmw_uros_sync_session(10); 
+                rmw_uros_sync_session(10);
+                missed_pings = 0; // Reset missed ping counter on successful response 
+            } else {
+                missed_pings++;
+                if(missed_pings >=3) {
+                    // If we miss 5 consecutive pings, we assume the connection is lost and reset
+                    ESP.restart();
+                }
             }
         }
 
